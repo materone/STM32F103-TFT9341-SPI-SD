@@ -4,11 +4,23 @@
 #include "usart.h"
 #include "MMC_SD.h"
 #include "spi.h"
+#include "timer.h"
+#include "rtc.h"
+#include "ff.h"  
+
+FATFS fs;         /* Work area (file system object) for logical drive */
+FIL fsrc, fdst;      /* file objects */
+FRESULT res;
+UINT br,bw;
+char path0[512]="0:";
+char buffer[4096];   /* file copy buffer */
+uint8_t textFileBuffer[] = "中英文测试字符串 \r\nChinese and English test strings \r\n";
 
 GPIO_InitTypeDef GPIO_InitStructure;
 
 //void Delayms(__IO uint32_t nCount);
 int SDTest(void);
+int testRTC(void);
 unsigned char Num[10]={0,1,2,3,4,5,6,7,8,9};
 
 void Redraw_Mainmenu(void)
@@ -109,16 +121,18 @@ int main(void)
   //uint16_t a;
   /* System Clocks Configuration **********************************************/
   SystemInit();
-  delay_init(8);//延时初始化 
-	uart_init(9600);
+  delay_init(72);//延时初始化 
+  uart_init(9600);
   while(1) 
   {
 		TFT_Init();			
 		TFT_Clear(BLACK);
 		TFT_LED_SET;
-		
+		printf("Test RTC\r\n");		
+		testRTC();
 		printf("Test SD\r\n");
 		SDTest();
+	    FTTest();
 		rdata = PAin(3);
 		printf("Get PA3 Data %d\r\n",rdata);
 		PAout(3)=1;
@@ -175,12 +189,10 @@ int SDTest(void)
 //		LED0=!LED0;//DS0闪烁
 	}
 	if(retry == 255)return 1;
-	//检测SD卡成功 											    
+	//检测SD卡成功 	
+	sd_size=SD_GetCapacity();										    
 	printf("SD Card Checked OK \r\n");
-	printf("SD Card Size:    Mb\r\n");
-	sd_size=SD_GetCapacity();	
-	printf("%i",sd_size);
-	//printf(itoa(sd_size));//显示SD卡容量
+	printf("SD Card Size:  %d Mb\r\n",sd_size);	
 	while(1)
 	{
 		if(t==30)//每6s钟执行一次
@@ -194,12 +206,200 @@ int SDTest(void)
 				printf("USART1 Send Data Over!");
 			}
 			t=0;
+			break;
 		}   
 		t++;
 		delay_ms(200);
 		//LED0=!LED0;
 	}
+	return 0;
 }
+
+//ALIENTEK Mini STM32开发板范例代码11
+//RTC实时时钟 实验
+//正点原子@ALIENTEK
+//技术论坛:www.openedv.com	  
+ 	
+const u8 *COMPILED_DATE=__DATE__;//获得编译日期
+const u8 *COMPILED_TIME=__TIME__;//获得编译时间
+
+const u8* Week[7]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+
+ int testRTC(void)
+ {
+	u8 t=0;	
+	RTC_Init();
+	if(t!=timer.sec)
+	{
+		t=timer.sec;
+		printf("%d-",timer.w_year);		
+		printf("%d-",timer.w_month);	
+		printf("%d  ",timer.w_date);	
+		printf("%d:",timer.hour);	
+		printf("%d:",timer.min);	
+		printf("%d",timer.sec);	
+		switch(timer.week)
+		{
+			case 0:
+				printf("%s\n","Sunday   ");
+				break;
+			case 1:
+				printf("%s\n","Monday   ");
+				break;
+			case 2:
+				printf("%s\n","Tuesday  ");
+				break;
+			case 3:
+				printf("%s\n","Wednesday");
+				break;
+			case 4:
+				printf("%s\n","Thursday ");
+				break;
+			case 5:
+				printf("%s\n","Friday   ");
+				break;
+			case 6:
+				printf("%s\n","Saturday ");
+				break;  
+		}
+	} 
+	return 0;
+ }
+FRESULT scan_files (
+    char* path        /* Start node to be scanned (also used as work area) */
+)
+{
+    FRESULT res;
+    FILINFO fno;
+    DIR dir;
+    int i;
+    char *fn;   /* This function is assuming non-Unicode cfg. */
+#if _USE_LFN
+    static char lfn[_MAX_LFN + 1];
+    fno.lfname = lfn;
+    fno.lfsize = sizeof(lfn);
+#endif
+
+
+    res = f_opendir(&dir, path);                       /* Open the directory */
+    if (res == FR_OK) {
+        i = strlen(path);
+        for (;;) {
+            res = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+            if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
+#if _USE_LFN
+            fn = *fno.lfname ? fno.lfname : fno.fname;
+#else
+            fn = fno.fname;
+#endif
+            if (fno.fattrib & AM_DIR) {                    /* It is a directory */
+                sprintf(&path[i], "/%s", fn);
+				printf("scan file - %s\n\r",path);
+                res = scan_files(path);
+                if (res != FR_OK) break;
+                path[i] = 0;
+            } else {                                       /* It is a file. */
+                printf("scan file - %s/%s\n\r", path, fn);
+            }
+        }
+    }else{
+		printf("scan files error : %d\n\r",res);
+	}
+
+    return res;
+}
+/*******************************************************************************
+  * @函数名称	SD_TotalSize
+  * @函数说明   文件空间占用情况 
+  * @输入参数   无 
+  * @输出参数   无
+  * @返回参数   1: 成功 
+  				0: 失败
+  * @注意事项	无
+  *****************************************************************************/
+int SD_TotalSize(char *path)
+{
+    FATFS *fs;
+    DWORD fre_clust;        
+
+    res = f_getfree(path, &fre_clust, &fs);  /* 必须是根目录，选择磁盘0 */
+    if ( res==FR_OK ) 
+    {
+	  printf("\n\rget %s drive space.\n\r",path);
+	  /* Print free space in unit of MB (assuming 512 bytes/sector) */
+      printf("%d MB total drive space.\r\n"
+           "%d MB available.\r\n",
+           ( (fs->n_fatent - 2) * fs->csize ) / 2 /1024 , (fre_clust * fs->csize) / 2 /1024 );
+		
+	  return 1;
+	}
+	else
+	{ 
+	  printf("\n\rGet total drive space faild!\n\r");
+	  return 0;   
+	}
+}
+
+/**
+  * @brief  串口打印输出
+  * @param  None
+  * @retval None
+  */
+int FTTest(void)
+{
+	u8 res;
+	printf("\r\n*******************************************************************************");
+	printf("\r\n************************ Copyright 2009-2012, ViewTool ************************");
+	printf("\r\n*************************** http://www.viewtool.com ***************************");
+	printf("\r\n***************************** All Rights Reserved *****************************");
+	printf("\r\n*******************************************************************************");
+	printf("\r\n");
+	//挂载文件系统
+	res = f_mount(&fs,"0:",1);
+	if(res != FR_OK){
+		printf("mount filesystem 0 failed : %d\n\r",res);
+	}
+//	//写文件测试
+//	printf("write file test......\n\r");
+//    res = f_open(&fdst, "0:/1.txt", FA_CREATE_ALWAYS | FA_WRITE);
+//	if(res != FR_OK){
+//		printf("open file error : %d\n\r",res);
+//	}else{
+//	    res = f_write(&fdst, textFileBuffer, sizeof(textFileBuffer), &bw);               /* Write it to the dst file */
+//		if(res == FR_OK){
+//			printf("write data ok! %d\n\r",bw);
+//		}else{
+//			printf("write data error : %d\n\r",res);
+//		}
+//		/*close file */
+//		f_close(&fdst);
+//	}
+
+	//读文件测试
+	printf("read file test......\n\r");
+    res = f_open(&fsrc, "0:/1.txt", FA_OPEN_EXISTING | FA_READ);
+    if(res != FR_OK){
+		printf("open file error : %d\n\r",res);
+	}else{
+	    res = f_read(&fsrc, buffer, sizeof(textFileBuffer), &br);     /* Read a chunk of src file */
+		if(res==FR_OK){
+			printf("read data num : %d\n\r",br);
+			printf("%s\n\r",buffer);
+		}else{
+			printf("read file error : %d\n\r",res);
+		}
+		/*close file */
+		f_close(&fsrc);
+	}
+	//扫描已经存在的文件
+	printf("\n\rbegin scan files path0......\n\r");
+	scan_files(path0);
+
+	SD_TotalSize(path0);//获取SD容量
+	return 0;
+}
+
 
 
 

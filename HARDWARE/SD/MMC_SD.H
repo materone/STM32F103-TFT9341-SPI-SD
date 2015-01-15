@@ -89,6 +89,7 @@ u8 SD_WriteSingleBlock(u32 sector, const u8 *buffer); 		//写一个sector
 u8 SD_ReadMultiBlock(u32 sector, u8 *buffer, u8 count); 	//读多个sector
 u8 SD_WriteMultiBlock(u32 sector, const u8 *data, u8 count);//写多个sector
 u8 SD_Read_Bytes(unsigned long address,unsigned char *buf,unsigned int offset,unsigned int bytes);//读取一byte
+void SPI_SetSpeed1(u8 SpeedSet);
 #endif
 
 
