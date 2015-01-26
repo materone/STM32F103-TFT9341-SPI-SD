@@ -8,18 +8,23 @@
 #include "rtc.h"
 #include "ff.h"  
 
-FATFS fs;         /* Work area (file system object) for logical drive */
-FIL fsrc, fdst;      /* file objects */
+FATFS fs;		 /* Work area (file system object) for logical drive */
+FIL fsrc, fdst;	  /* file objects */
 FRESULT res;
 UINT br,bw;
-char path0[512]="0:";
-char buffer[4096];   /* file copy buffer */
-uint8_t textFileBuffer[] = "中英文测试字符串 \r\nChinese and English test strings \r\n";
+uint16_t bmpWidth, bmpHeight;
+uint8_t bmpDepth, bmpImageoffset;
+char path0[20]="0:";
+//char path0[512]="0:";
+//char buffer[4096];   /* file copy buffer */
+char buffer[10];   /* file copy buffer */
+uint8_t textFileBuffer[] = "ABCDE";
 
 GPIO_InitTypeDef GPIO_InitStructure;
 
 //void Delayms(__IO uint32_t nCount);
 int SDTest(void);
+int FTTest(void);
 int testRTC(void);
 unsigned char Num[10]={0,1,2,3,4,5,6,7,8,9};
 
@@ -35,7 +40,7 @@ void Redraw_Mainmenu(void)
 	DisplayButtonUp(15,98,113,118); //x1,y1,x2,y2
 	TFT_DrawFont_GBK16(16,100,RED,GRAY0,"图片显示测试");
 
-	TFT_DrawFont_GBK16(16,120,BLUE,GRAY0,"S1:Move.    ");
+	TFT_DrawFont_GBK16(16,120,BLUE,GRAY0,"S1:Move.	");
 	TFT_DrawFont_GBK16(16,140,RED,GRAY0, "S2:Sellect  ");
 	//delay_ms(1000);
 	//delay_ms(1000);
@@ -83,10 +88,10 @@ void Font_Test(void)
 
 	delay_ms(1000);
 	TFT_Clear(WHITE);
-	TFT_DrawFont_GBK16(x_offset,10,RED,WHITE,  "     全动电子技术有限公司      ");
-	TFT_DrawFont_GBK16(x_offset,30,RED,WHITE,  "         QDtech .,LTD         ");
-	TFT_DrawFont_GBK24(x_offset,50,BLUE,WHITE, "           欢迎您            ");
-	TFT_DrawFont_GBK16(x_offset,100,GREEN,WHITE,   "     全程技术支持     ");	
+	TFT_DrawFont_GBK16(x_offset,10,RED,WHITE,  "	 全动电子技术有限公司	  ");
+	TFT_DrawFont_GBK16(x_offset,30,RED,WHITE,  "		 QDtech .,LTD		 ");
+	TFT_DrawFont_GBK24(x_offset,50,BLUE,WHITE, "		   欢迎您			");
+	TFT_DrawFont_GBK16(x_offset,100,GREEN,WHITE,   "	 全程技术支持	 ");	
 	TFT_DrawFont_GBK16(x_offset,120,RED,YELLOW,   "http://qdtech.taobao.com");
 	TFT_DrawFont_GBK16(x_offset,140,RED,YELLOW,   "E-Mail:QDtech2008@gmail.com");
 	TFT_DrawFont_GBK16(x_offset,160,RED,YELLOW,   "技术交流群:324828016");	
@@ -132,7 +137,7 @@ int main(void)
 		testRTC();
 		printf("Test SD\r\n");
 		SDTest();
-	    FTTest();
+		FTTest();
 		rdata = PAin(3);
 		printf("Get PA3 Data %d\r\n",rdata);
 		PAout(3)=1;
@@ -167,12 +172,12 @@ u8 buf[512];//SD卡数据缓存区
 int SDTest(void)
 {	
 	u32 sd_size;
-	u8 t=0;					    
+	u8 t=0;						
 //  	Stm32_Clock_Init(9);//系统时钟设置
 //	delay_init(72);		//延时初始化
 //	uart_init(72,9600); //串口1初始化  	  
 //	LCD_Init();			//初始化液晶 
-//	LED_Init();         //LED初始化		  													    
+//	LED_Init();		 //LED初始化		  														
 //					   
 // 	POINT_COLOR=RED;//设置字体为红色	   
 //	LCD_ShowString(60,50,"Mini STM32");	
@@ -184,13 +189,13 @@ int SDTest(void)
 	{
 		printf("SD Card Failed!\r\n");
 		delay_ms(500);
-		printf("Please Check!      \r\n");
+		printf("Please Check!	  \r\n");
 		delay_ms(500);
 //		LED0=!LED0;//DS0闪烁
 	}
 	if(retry == 255)return 1;
 	//检测SD卡成功 	
-	sd_size=SD_GetCapacity();										    
+	sd_size=SD_GetCapacity();											
 	printf("SD Card Checked OK \r\n");
 	printf("SD Card Size:  %d Mb\r\n",sd_size);	
 	while(1)
@@ -201,7 +206,7 @@ int SDTest(void)
 			{	
 				printf("USART1 Sending Data...");
 				printf("SECTOR 0 DATA:\n");
-				for(sd_size=0;sd_size<512;sd_size++)printf("%x ",buf[sd_size]);//打印MBR扇区数据    	   
+				for(sd_size=0;sd_size<512;sd_size++)printf("%x ",buf[sd_size]);//打印MBR扇区数据		   
 				printf("\nDATA ENDED\n");
 				printf("USART1 Send Data Over!");
 			}
@@ -266,48 +271,48 @@ const u8* Week[7]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","
 	return 0;
  }
 FRESULT scan_files (
-    char* path        /* Start node to be scanned (also used as work area) */
+	char* path		/* Start node to be scanned (also used as work area) */
 )
 {
-    FRESULT res;
-    FILINFO fno;
-    DIR dir;
-    int i;
-    char *fn;   /* This function is assuming non-Unicode cfg. */
+	FRESULT res;
+	FILINFO fno;
+	DIR dir;
+	int i;
+	char *fn;   /* This function is assuming non-Unicode cfg. */
 #if _USE_LFN
-    static char lfn[_MAX_LFN + 1];
-    fno.lfname = lfn;
-    fno.lfsize = sizeof(lfn);
+	static char lfn[_MAX_LFN + 1];
+	fno.lfname = lfn;
+	fno.lfsize = sizeof(lfn);
 #endif
 
 
-    res = f_opendir(&dir, path);                       /* Open the directory */
-    if (res == FR_OK) {
-        i = strlen(path);
-        for (;;) {
-            res = f_readdir(&dir, &fno);                   /* Read a directory item */
-            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
-            if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
+	res = f_opendir(&dir, path);					   /* Open the directory */
+	if (res == FR_OK) {
+		i = strlen(path);
+		for (;;) {
+			res = f_readdir(&dir, &fno);				   /* Read a directory item */
+			if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+			if (fno.fname[0] == '.') continue;			 /* Ignore dot entry */
 #if _USE_LFN
-            fn = *fno.lfname ? fno.lfname : fno.fname;
+			fn = *fno.lfname ? fno.lfname : fno.fname;
 #else
-            fn = fno.fname;
+			fn = fno.fname;
 #endif
-            if (fno.fattrib & AM_DIR) {                    /* It is a directory */
-                sprintf(&path[i], "/%s", fn);
+			if (fno.fattrib & AM_DIR) {					/* It is a directory */
+				sprintf(&path[i], "/%s", fn);
 				printf("scan file - %s\n\r",path);
-                res = scan_files(path);
-                if (res != FR_OK) break;
-                path[i] = 0;
-            } else {                                       /* It is a file. */
-                printf("scan file - %s/%s\n\r", path, fn);
-            }
-        }
-    }else{
+				res = scan_files(path);
+				if (res != FR_OK) break;
+				path[i] = 0;
+			} else {									   /* It is a file. */
+				printf("scan file - %s/%s\n\r", path, fn);
+			}
+		}
+	}else{
 		printf("scan files error : %d\n\r",res);
 	}
 
-    return res;
+	return res;
 }
 /*******************************************************************************
   * @函数名称	SD_TotalSize
@@ -320,17 +325,17 @@ FRESULT scan_files (
   *****************************************************************************/
 int SD_TotalSize(char *path)
 {
-    FATFS *fs;
-    DWORD fre_clust;        
+	FATFS *fs;
+	DWORD fre_clust;		
 
-    res = f_getfree(path, &fre_clust, &fs);  /* 必须是根目录，选择磁盘0 */
-    if ( res==FR_OK ) 
-    {
+	res = f_getfree(path, &fre_clust, &fs);  /* 必须是根目录，选择磁盘0 */
+	if ( res==FR_OK ) 
+	{
 	  printf("\n\rget %s drive space.\n\r",path);
 	  /* Print free space in unit of MB (assuming 512 bytes/sector) */
-      printf("%d MB total drive space.\r\n"
-           "%d MB available.\r\n",
-           ( (fs->n_fatent - 2) * fs->csize ) / 2 /1024 , (fre_clust * fs->csize) / 2 /1024 );
+	  printf("%d MB total drive space.\r\n"
+		   "%d MB available.\r\n",
+		   ( (fs->n_fatent - 2) * fs->csize ) / 2 /1024 , (fre_clust * fs->csize) / 2 /1024 );
 		
 	  return 1;
 	}
@@ -349,6 +354,7 @@ int SD_TotalSize(char *path)
 int FTTest(void)
 {
 	u8 res;
+	u16 cnt = 1;
 	printf("\r\n*******************************************************************************");
 	printf("\r\n************************ Copyright 2009-2012, ViewTool ************************");
 	printf("\r\n*************************** http://www.viewtool.com ***************************");
@@ -362,11 +368,11 @@ int FTTest(void)
 	}
 //	//写文件测试
 //	printf("write file test......\n\r");
-//    res = f_open(&fdst, "0:/1.txt", FA_CREATE_ALWAYS | FA_WRITE);
+//	res = f_open(&fdst, "0:/1.txt", FA_CREATE_ALWAYS | FA_WRITE);
 //	if(res != FR_OK){
 //		printf("open file error : %d\n\r",res);
 //	}else{
-//	    res = f_write(&fdst, textFileBuffer, sizeof(textFileBuffer), &bw);               /* Write it to the dst file */
+//		res = f_write(&fdst, textFileBuffer, sizeof(textFileBuffer), &bw);			   /* Write it to the dst file */
 //		if(res == FR_OK){
 //			printf("write data ok! %d\n\r",bw);
 //		}else{
@@ -378,29 +384,118 @@ int FTTest(void)
 
 	//读文件测试
 	printf("read file test......\n\r");
-    res = f_open(&fsrc, "0:/1.txt", FA_OPEN_EXISTING | FA_READ);
-    if(res != FR_OK){
+	res = f_open(&fsrc, "0:/1.TXT", FA_OPEN_EXISTING | FA_READ);
+	if(res != FR_OK){
 		printf("open file error : %d\n\r",res);
 	}else{
-	    res = f_read(&fsrc, buffer, sizeof(textFileBuffer), &br);     /* Read a chunk of src file */
+		res = f_read(&fsrc, buffer, sizeof(textFileBuffer), &br);	 /* Read a chunk of src file */
 		if(res==FR_OK){
 			printf("read data num : %d\n\r",br);
-			printf("%s\n\r",buffer);
+			printf("Cont:%s\n\r",buffer);
 		}else{
 			printf("read file error : %d\n\r",res);
 		}
 		/*close file */
 		f_close(&fsrc);
 	}
+	
+		
 	//扫描已经存在的文件
 	printf("\n\rbegin scan files path0......\n\r");
-	scan_files(path0);
+	//scan_files(path0);
 
-	SD_TotalSize(path0);//获取SD容量
+	//SD_TotalSize(path0);//获取SD容量
+	
+	//读BMP文件测试
+	printf("read bmp file test......\n\r");
+	
+	for (;cnt<140;cnt++){
+		sprintf(path0,"0:/%d.bmp",cnt);
+		res = f_open(&fsrc, path0, FA_OPEN_EXISTING | FA_READ);
+		if(res != FR_OK){
+			printf("open file error : %d\n\r",res);
+		}else{
+			//bmpReadHeader(fsrc);
+			/*close file */
+			f_close(&fsrc);
+		}
+	}
 	return 0;
 }
 
+/*********************************************/
+// These read data from the SD card file and convert them
+// to big endian(the data is stored in little endian format!)
 
+// LITTLE ENDIAN!
+uint16_t read16(FIL *f)
+{
+  uint16_t d;
+	uint32_t rc;	
+  uint8_t b,buff[1];
+  f_read(f,buff,1,&rc);
+	b = buff[0];
+  f_read(f,buff,1,&rc);
+	d=buff[0];
+  d <<= 8;
+  d |= b;
+  return d;
+}
+
+// LITTLE ENDIAN!
+uint32_t read32(FIL *f)
+{
+  uint32_t d;
+  uint16_t b;
+
+  b = read16(f);
+  d = read16(f);
+  d <<= 16;
+  d |= b;
+  return d;
+}
+
+int  bmpReadHeader(FIL *f) {
+  // read header
+  uint32_t tmp;
+
+  if (read16(f) != 0x4D42) {
+	// magic bytes missing
+	return -1;
+  }
+
+  // read file size
+  tmp = read32(f);
+  printf("size %x\r\n",tmp);
+
+  // read and ignore creator bytes
+  read32(f);
+
+  bmpImageoffset = read32(f);
+  printf("offset %d\r\n",bmpImageoffset);
+
+  // read DIB header
+  tmp = read32(f);
+  printf("header size %d\r\n",tmp);
+  bmpWidth = read32(f);
+  bmpHeight = read32(f);
+
+
+  if (read16(f) != 1)
+	return -1;
+
+  bmpDepth = read16(f);
+ printf("bitdepth %d\r\n",bmpDepth);
+
+  if (read32(f) != 0) {
+	// compression not supported!
+	return -1;
+  }
+
+   printf("compression %d\r\n",tmp);
+
+  return 1;
+}
 
 
 
