@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "rtc.h"
 #include "ff.h"  
+#include "string.h"
 
 FATFS fs;		 /* Work area (file system object) for logical drive */
 FIL fsrc, fdst;	  /* file objects */
@@ -26,6 +27,7 @@ GPIO_InitTypeDef GPIO_InitStructure;
 int SDTest(void);
 int FTTest(void);
 int testRTC(void);
+int bmpReadHeader(FIL *);
 unsigned char Num[10]={0,1,2,3,4,5,6,7,8,9};
 
 void Redraw_Mainmenu(void)
@@ -409,13 +411,14 @@ int FTTest(void)
 	//¶ÁBMPÎÄ¼þ²âÊÔ
 	printf("read bmp file test......\n\r");
 	
-	for (;cnt<140;cnt++){
-		sprintf(path0,"0:/%d.bmp",cnt);
+	for (;cnt<4;cnt++){
+		sprintf(path0,"0:/%d.BMP",cnt);
+		printf(path0);
 		res = f_open(&fsrc, path0, FA_OPEN_EXISTING | FA_READ);
 		if(res != FR_OK){
 			printf("open file error : %d\n\r",res);
 		}else{
-			//bmpReadHeader(fsrc);
+			bmpReadHeader(&fsrc);
 			/*close file */
 			f_close(&fsrc);
 		}
@@ -494,6 +497,7 @@ int  bmpReadHeader(FIL *f) {
 
    printf("compression %d\r\n",tmp);
 
+	printf("W:H %d:%d\r\n",bmpWidth,bmpHeight);
   return 1;
 }
 
