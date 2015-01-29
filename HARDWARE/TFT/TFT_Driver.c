@@ -139,8 +139,8 @@ void TFT_Init(void)
 #else
 				TFT_WriteData(0x48); 
 #endif
-        TFT_WriteIndex(0x3A);    
-        TFT_WriteData(0x55); 
+        TFT_WriteIndex(0x3A);   //set color 18 bit or 16bit 
+        TFT_WriteData(0x55);    //55 -> 16 66->18
         TFT_WriteIndex(0xB1);    
         TFT_WriteData(0x00);  
         TFT_WriteData(0x18); 
