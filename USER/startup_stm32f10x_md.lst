@@ -476,7 +476,7 @@ ARM Macro Assembler    Page 8
               00000200 
               00000000 
 Command Line: --debug --xref --cpu=Cortex-M3 --apcs=interwork --depend=..\bin\s
-tartup_stm32f10x_md.d -o..\bin\startup_stm32f10x_md.o -IH:\Dev\STM32F103-TFT943
+tartup_stm32f10x_md.d -o..\bin\startup_stm32f10x_md.o -IC:\Dev\STM32F103-TFT943
 1-SPI-SD\USER\RTE -IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\1.0.5\Device\Include
  -IC:\Keil_v5\ARM\CMSIS\Include --predefine="STM32F10X_MD SETA 1" --list=.\star
 tup_stm32f10x_md.lst ..\CORE\startup_stm32f10x_md.s

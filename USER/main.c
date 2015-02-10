@@ -9,12 +9,20 @@
 #include "ff.h"  
 #include "string.h"
 
+//define
+#define BUFFPIXEL 3*100
+uint8_t color18 = 1;
+uint8_t feed = 1;
+
+//var
 FATFS fs;		 /* Work area (file system object) for logical drive */
 FIL fsrc, fdst;	  /* file objects */
 FRESULT res;
 UINT br,bw;
 uint16_t bmpWidth, bmpHeight;
 uint8_t bmpDepth, bmpImageoffset;
+
+
 char path0[20]="0:";
 //char path0[512]="0:";
 //char buffer[4096];   /* file copy buffer */
@@ -28,8 +36,8 @@ int SDTest(void);
 int FTTest(void);
 int testRTC(void);
 int bmpReadHeader(FIL *);
+void bmpdraw(FIL *, uint8_t , uint8_t);
 unsigned char Num[10]={0,1,2,3,4,5,6,7,8,9};
-
 void Redraw_Mainmenu(void)
 {
 	TFT_Clear(GRAY0);
@@ -419,6 +427,17 @@ int FTTest(void)
 			printf("open file error : %d\n\r",res);
 		}else{
 			bmpReadHeader(&fsrc);
+			 uint16_t x = 0, y = 0;
+			if (bmpWidth < 240);
+			x = (240 - bmpWidth) / 2;
+			if (bmpHeight < 320)
+			  y = (320 - bmpHeight) / 2;
+			if (bmpWidth % 4 == 0) {
+			  feed = 0;
+			} else {
+			  feed = 1;
+			}
+			bmpdraw(&fsrc, x, y);
 			/*close file */
 			f_close(&fsrc);
 		}
@@ -501,6 +520,75 @@ int  bmpReadHeader(FIL *f) {
   return 1;
 }
 
+void bmpdraw(FIL *f, uint8_t x, uint8_t y)
+{
+  TFT_Clear(BLACK); 
+  f_lseek(f,bmpImageoffset);
 
+  uint32_t time = millis();
+  uint8_t  p, g, b;
+  uint16_t i, j;
+
+  uint8_t sdbuffer[BUFFPIXEL];  // 3 * pixels to buffer
+  uint16_t buffidx = BUFFPIXEL;
+
+  Tft.setCol(x, bmpWidth + x - 1);
+  Tft.setPage(y, bmpHeight + y - 1);
+
+  //  uint8_t buf[4];
+  //  Tft.rcvData(0x09, buf, 4);
+  //  for (uint8_t idx = 0; idx < 4; idx++) {
+  //    log(idx);
+  //    Serial.println(buf[idx], HEX);
+  //  }
+  Tft.sendCMD(0x2c);
+  TFT_DC_HIGH;
+  TFT_CS_LOW;
+  for (i = 0; i < bmpHeight; i++)
+  {
+    for (j = 0; j < bmpWidth; j++)
+    {
+      // read more pixels
+      if (buffidx >= BUFFPIXEL)
+      {
+        TFT_CS_HIGH;
+        bmpFile.read(sdbuffer, BUFFPIXEL);
+        buffidx = 0;
+        TFT_CS_LOW;
+      }
+      b = sdbuffer[buffidx++];     // blue
+      g = sdbuffer[buffidx++];     // green
+      p = sdbuffer[buffidx++];     // red
+      SPI.transfer(p );
+      SPI.transfer(g ); //&0xFC
+      SPI.transfer(b );
+    }
+    //pad last bit,for bmp must 4 * byte per line
+    if (feed) {
+      uint8_t pad = bmpWidth % 4;
+      if (buffidx >=  BUFFPIXEL) {
+        TFT_CS_HIGH;
+        bmpFile.seek(bmpFile.position() + pad);
+        TFT_CS_LOW;
+      } else if (pad == 3) {
+        buffidx += 3;
+      } else {
+        memmove(sdbuffer + buffidx, sdbuffer + buffidx + pad, BUFFPIXEL - pad - buffidx);
+        TFT_CS_HIGH;
+        bmpFile.read(sdbuffer + BUFFPIXEL - pad, pad);
+        TFT_CS_LOW;
+      }
+    }
+  }
+  TFT_CS_HIGH;
+  char s1[14 + sizeof(bmpfchar)];
+  sprintf(s1, "%s %i * %i", bmpfchar, bmpWidth, bmpHeight);
+  Tft.drawString(s1, 0, 0, 2, 0xFF00);
+  delay(100);
+  scrollV();
+  delay(100);
+  Serial.print(millis() - time, DEC);
+  Serial.println(" ms");
+}
 
 
