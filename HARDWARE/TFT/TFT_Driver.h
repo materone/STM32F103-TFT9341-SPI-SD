@@ -64,4 +64,8 @@ void TFT_DrawFont_GBK16(u16 x, u16 y, u16 fc, u16 bc, u8 *s);
 void TFT_DrawFont_GBK24(u16 x, u16 y, u16 fc, u16 bc, u8 *s);
 void TFT_DrawFont_Num32(u16 x, u16 y, u16 fc, u16 bc, u16 num) ;
 
+void TFT_WriteData(u8 Data);
+void TFT_WriteIndex(u8 Data);
+void TFT_SetRegion(u16 x_start,u16 y_start,u16 x_end,u16 y_end);
+
 #endif
