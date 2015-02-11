@@ -139,26 +139,18 @@ int main(void)
   SystemInit();
   delay_init(72);//延时初始化 
   uart_init(9600);
+	TFT_Init();			
+	TFT_Clear(BLACK);
+	TFT_LED_SET;
+	//printf("Test RTC\r\n");		
+	//testRTC();
+	printf("Test SD\r\n");
+	TFT_CS_SET;
+	SDTest();
+	TFT_CS_CLR;
   while(1) 
   {
-		TFT_Init();			
-		TFT_Clear(BLACK);
-		TFT_LED_SET;
-		printf("Test RTC\r\n");		
-		testRTC();
-		printf("Test SD\r\n");
-		TFT_CS_SET;
-		SDTest();
-		TFT_CS_CLR;
 		FTTest();
-		rdata = PAin(3);
-		printf("Get PA3 Data %d\r\n",rdata);
-		PAout(3)=1;
-		rdata = PAin(3);
-		printf("Get PA3 After set 1 Data %d\r\n",rdata);
-		PAout(3)=0;
-		rdata = PAin(3);
-		printf("Get PA3 After reset 0 Data %d\r\n",rdata);
 		TFT_Clear(BLUE);  
 		//delay_ms(1000);
 		delay_ms(1000);
@@ -185,7 +177,7 @@ u8 buf[512];//SD卡数据缓存区
 int SDTest(void)
 {	
 	u32 sd_size;
-	u8 t=0;						
+//	u8 t=0;						
 //  	Stm32_Clock_Init(9);//系统时钟设置
 //	delay_init(72);		//延时初始化
 //	uart_init(72,9600); //串口1初始化  	  
@@ -210,26 +202,26 @@ int SDTest(void)
 	//检测SD卡成功 	
 	sd_size=SD_GetCapacity();											
 	printf("SD Card Checked OK \r\n");
-	printf("SD Card Size:  %d Mb\r\n",sd_size);	
-	while(1)
-	{
-		if(t==30)//每6s钟执行一次
-		{
-			if(SD_ReadSingleBlock(0,buf)==0)//读取MBR扇区
-			{	
-				printf("USART1 Sending Data...");
-				printf("SECTOR 0 DATA:\n");
-				for(sd_size=0;sd_size<512;sd_size++)printf("%x ",buf[sd_size]);//打印MBR扇区数据		   
-				printf("\nDATA ENDED\n");
-				printf("USART1 Send Data Over!");
-			}
-			t=0;
-			break;
-		}   
-		t++;
-		delay_ms(200);
-		//LED0=!LED0;
-	}
+	printf("SD Card Size:  %d Byte\r\n",sd_size);	
+//	while(1)
+//	{
+//		if(t==30)//每6s钟执行一次
+//		{
+//			if(SD_ReadSingleBlock(0,buf)==0)//读取MBR扇区
+//			{	
+//				printf("USART1 Sending Data...");
+//				printf("SECTOR 0 DATA:\n");
+//				for(sd_size=0;sd_size<512;sd_size++)printf("%x ",buf[sd_size]);//打印MBR扇区数据		   
+//				printf("\nDATA ENDED\n");
+//				printf("USART1 Send Data Over!");
+//			}
+//			t=0;
+//			break;
+//		}   
+//		t++;
+//		delay_ms(200);
+//		//LED0=!LED0;
+//	}
 	return 0;
 }
 
@@ -369,54 +361,34 @@ int FTTest(void)
 	u8 res;
 	u16 cnt = 1;
 	uint16_t x = 0, y = 0;
-	printf("\r\n*******************************************************************************");
-	printf("\r\n************************ Copyright 2009-2012, ViewTool ************************");
-	printf("\r\n*************************** http://www.viewtool.com ***************************");
-	printf("\r\n***************************** All Rights Reserved *****************************");
-	printf("\r\n*******************************************************************************");
-	printf("\r\n");
+	printf("Begin BMP File display test\r\n");
 	TFT_CS_SET;
 	//挂载文件系统
 	res = f_mount(&fs,"0:",1);
 	if(res != FR_OK){
 		printf("mount filesystem 0 failed : %d\n\r",res);
 	}
-//	//写文件测试
-//	printf("write file test......\n\r");
-//	res = f_open(&fdst, "0:/1.txt", FA_CREATE_ALWAYS | FA_WRITE);
+
+	//读文件测试
+//	printf("read file test......\n\r");
+//	res = f_open(&fsrc, "0:/1.TXT", FA_OPEN_EXISTING | FA_READ);
 //	if(res != FR_OK){
 //		printf("open file error : %d\n\r",res);
 //	}else{
-//		res = f_write(&fdst, textFileBuffer, sizeof(textFileBuffer), &bw);			   /* Write it to the dst file */
-//		if(res == FR_OK){
-//			printf("write data ok! %d\n\r",bw);
+//		res = f_read(&fsrc, buffer, sizeof(textFileBuffer), &br);	 /* Read a chunk of src file */
+//		if(res==FR_OK){
+//			printf("read data num : %d\n\r",br);
+//			printf("Cont:%s\n\r",buffer);
 //		}else{
-//			printf("write data error : %d\n\r",res);
+//			printf("read file error : %d\n\r",res);
 //		}
 //		/*close file */
-//		f_close(&fdst);
+//		f_close(&fsrc);
 //	}
-
-	//读文件测试
-	printf("read file test......\n\r");
-	res = f_open(&fsrc, "0:/1.TXT", FA_OPEN_EXISTING | FA_READ);
-	if(res != FR_OK){
-		printf("open file error : %d\n\r",res);
-	}else{
-		res = f_read(&fsrc, buffer, sizeof(textFileBuffer), &br);	 /* Read a chunk of src file */
-		if(res==FR_OK){
-			printf("read data num : %d\n\r",br);
-			printf("Cont:%s\n\r",buffer);
-		}else{
-			printf("read file error : %d\n\r",res);
-		}
-		/*close file */
-		f_close(&fsrc);
-	}
 	
 		
 	//扫描已经存在的文件
-	printf("\n\rbegin scan files path0......\n\r");
+//	printf("\n\rbegin scan files path0......\n\r");
 	//scan_files(path0);
 
 	//SD_TotalSize(path0);//获取SD容量
@@ -534,7 +506,7 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
   uint32_t rc;
   uint8_t  p, g, b;
   uint16_t i, j;
-  uint8_t temp[4];
+//  uint8_t temp[4];
 
   uint8_t sdbuffer[BUFFPIXEL];  // 3 * pixels to buffer
   uint16_t buffidx = BUFFPIXEL;
@@ -591,7 +563,8 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
 				//TFT_CS_HIGH;		  
 				TFT_CS_SET;
 				//bmpFile.seek(bmpFile.position() + pad);
-				f_read(f,temp,pad,&rc);
+				f_lseek(f,f_tell(f)+pad);
+				//f_read(f,temp,pad,&rc);
 				//TFT_CS_LOW;		  		  
 				TFT_CS_CLR;
 			} else if (pad == 3) {
@@ -602,7 +575,6 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
 	//		bmpFile.read(sdbuffer + BUFFPIXEL - pad, pad);
 	//		TFT_CS_LOW;
 				TFT_CS_SET;
-	//	  bmpFile.seek(bmpFile.position() + pad);
 				f_read(f,sdbuffer + BUFFPIXEL - pad,pad,&rc);		  		  
 				TFT_CS_CLR;
 			}
@@ -615,10 +587,11 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
 //  Tft.drawString(s1, 0, 0, 2, 0xFF00);
 //  delay(100);
 //  scrollV();
-  delay_ms(5000);
 	TFT_CS_CLR;
   TFT_WriteIndex(0x3A);   //set color 18 bit or 16bit 
   TFT_WriteData(0x55);    //55 -> 16 66->18
+	TFT_DrawFont_GBK16(0,0,BLUE,WHITE,"Some best picture");
+	delay_ms(5000);
  // printf("Use %d ms",millis() - time);
 //  Serial.println(" ms");
 }
