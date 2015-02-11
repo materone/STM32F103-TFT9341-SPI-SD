@@ -217,3 +217,7 @@ pip-log.txt
 .mr.developer.cfg
 *.tony
 *.uvoptx
+*.lst
+*.tony
+*.uvoptx
+*.map

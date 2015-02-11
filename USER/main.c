@@ -11,6 +11,7 @@
 
 //define
 #define BUFFPIXEL 3*100
+#define PICFILES	140;
 uint8_t color18 = 1;
 uint8_t feed = 1;
 
@@ -146,7 +147,9 @@ int main(void)
 		printf("Test RTC\r\n");		
 		testRTC();
 		printf("Test SD\r\n");
+		TFT_CS_SET;
 		SDTest();
+		TFT_CS_CLR;
 		FTTest();
 		rdata = PAin(3);
 		printf("Get PA3 Data %d\r\n",rdata);
@@ -372,6 +375,7 @@ int FTTest(void)
 	printf("\r\n***************************** All Rights Reserved *****************************");
 	printf("\r\n*******************************************************************************");
 	printf("\r\n");
+	TFT_CS_SET;
 	//挂载文件系统
 	res = f_mount(&fs,"0:",1);
 	if(res != FR_OK){
@@ -420,7 +424,7 @@ int FTTest(void)
 	//读BMP文件测试
 	printf("read bmp file test......\n\r");
 	
-	for (;cnt<4;cnt++){
+	for ( ;cnt < 140; cnt++){
 		sprintf(path0,"0:/%d.BMP",cnt);
 		printf(path0);
 		res = f_open(&fsrc, path0, FA_OPEN_EXISTING | FA_READ);
@@ -439,6 +443,9 @@ int FTTest(void)
 			} else {
 			  feed = 1;
 			}
+			//clear screen
+			TFT_CS_CLR;
+			TFT_Clear(BLACK); 
 			bmpdraw(&fsrc, x, y);
 			/*close file */
 			f_close(&fsrc);
@@ -531,10 +538,8 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
 
   uint8_t sdbuffer[BUFFPIXEL];  // 3 * pixels to buffer
   uint16_t buffidx = BUFFPIXEL;
-
-  TFT_Clear(BLACK); 
 	TFT_WriteIndex(0x3A);   //set color 18 bit or 16bit 
-        TFT_WriteData(0x66);    //55 -> 16 66->18
+  TFT_WriteData(0x66);    //55 -> 16 66->18
   f_lseek(f,bmpImageoffset);
 //  Tft.setCol(x, bmpWidth + x - 1);
 //  Tft.setPage(y, bmpHeight + y - 1);
@@ -555,64 +560,65 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
 	TFT_RS_SET;
   for (i = 0; i < bmpHeight; i++)
   {
-	for (j = 0; j < bmpWidth; j++)
-	{
-	  // read more pixels
-	  if (buffidx >= BUFFPIXEL)
-	  {
-		//TFT_CS_HIGH;
-		  TFT_CS_SET;
-	   // bmpFile.read(sdbuffer, BUFFPIXEL);
-		  f_read(f,sdbuffer,BUFFPIXEL,&rc);
-		buffidx = 0;
-		//TFT_CS_LOW;		  
-		TFT_CS_CLR;
-	  }
-	  b = sdbuffer[buffidx++];	 // blue
-	  g = sdbuffer[buffidx++];	 // green
-	  p = sdbuffer[buffidx++];	 // red
-	  
-//	  SPI.transfer(p );
-//	  SPI.transfer(g ); //&0xFC
-//	  SPI.transfer(b );
-	  TFT_WriteData(p);
-	  TFT_WriteData(g);
-	  TFT_WriteData(b);
-	}
-	//pad last bit,for bmp must 4 * byte per line
-	if (feed) {
-	  uint8_t pad = bmpWidth % 4;
-	  if (buffidx >=  BUFFPIXEL) {
-		//TFT_CS_HIGH;		  
-		TFT_CS_SET;
-		//bmpFile.seek(bmpFile.position() + pad);
-		  f_read(f,temp,pad,&rc);
-		//TFT_CS_LOW;		  		  
-		TFT_CS_CLR;
-	  } else if (pad == 3) {
-		buffidx += 3;
-	  } else {
-		memmove(sdbuffer + buffidx, sdbuffer + buffidx + pad, BUFFPIXEL - pad - buffidx);
-//		TFT_CS_HIGH;
-//		bmpFile.read(sdbuffer + BUFFPIXEL - pad, pad);
-//		TFT_CS_LOW;
-		  TFT_CS_SET;
-		//bmpFile.seek(bmpFile.position() + pad);
-		  f_read(f,sdbuffer + BUFFPIXEL - pad,pad,&rc);		  		  
-		TFT_CS_CLR;
-	  }
-	}
+		for (j = 0; j < bmpWidth; j++)
+		{
+			// read more pixels
+			if (buffidx >= BUFFPIXEL)
+			{
+			//TFT_CS_HIGH;
+				TFT_CS_SET;
+			 // bmpFile.read(sdbuffer, BUFFPIXEL);
+				f_read(f,sdbuffer,BUFFPIXEL,&rc);
+				buffidx = 0;
+				//TFT_CS_LOW;		  
+				TFT_CS_CLR;
+			}
+			b = sdbuffer[buffidx++];	 // blue
+			g = sdbuffer[buffidx++];	 // green
+			p = sdbuffer[buffidx++];	 // red
+			
+	//	  SPI.transfer(p );
+	//	  SPI.transfer(g ); //&0xFC
+	//	  SPI.transfer(b );
+			SPI_WriteByte(SPI2,p);
+			SPI_WriteByte(SPI2,g);
+			SPI_WriteByte(SPI2,b);
+		}
+		//pad last bit,for bmp must 4 * byte per line
+		if (feed) {
+			uint8_t pad = bmpWidth % 4;
+			if (buffidx >=  BUFFPIXEL) {
+				//TFT_CS_HIGH;		  
+				TFT_CS_SET;
+				//bmpFile.seek(bmpFile.position() + pad);
+				f_read(f,temp,pad,&rc);
+				//TFT_CS_LOW;		  		  
+				TFT_CS_CLR;
+			} else if (pad == 3) {
+				buffidx += 3;
+			} else {
+				memmove(sdbuffer + buffidx, sdbuffer + buffidx + pad, BUFFPIXEL - pad - buffidx);
+	//		TFT_CS_HIGH;
+	//		bmpFile.read(sdbuffer + BUFFPIXEL - pad, pad);
+	//		TFT_CS_LOW;
+				TFT_CS_SET;
+	//	  bmpFile.seek(bmpFile.position() + pad);
+				f_read(f,sdbuffer + BUFFPIXEL - pad,pad,&rc);		  		  
+				TFT_CS_CLR;
+			}
+		}
   }
   //TFT_CS_HIGH;
-	TFT_CS_SET;
+//	TFT_CS_SET;
 //  char s1[14 + sizeof(bmpfchar)];
 //  sprintf(s1, "%s %i * %i", bmpfchar, bmpWidth, bmpHeight);
 //  Tft.drawString(s1, 0, 0, 2, 0xFF00);
 //  delay(100);
 //  scrollV();
-  delay_ms(1000);
-  	TFT_WriteIndex(0x3A);   //set color 18 bit or 16bit 
-    TFT_WriteData(0x55);    //55 -> 16 66->18
+  delay_ms(5000);
+	TFT_CS_CLR;
+  TFT_WriteIndex(0x3A);   //set color 18 bit or 16bit 
+  TFT_WriteData(0x55);    //55 -> 16 66->18
  // printf("Use %d ms",millis() - time);
 //  Serial.println(" ms");
 }
