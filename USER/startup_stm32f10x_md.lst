@@ -475,11 +475,12 @@ ARM Macro Assembler    Page 8
               00000400 
               00000200 
               00000000 
-Command Line: --debug --xref --cpu=Cortex-M3 --apcs=interwork --depend=..\bin\s
-tartup_stm32f10x_md.d -o..\bin\startup_stm32f10x_md.o -IH:\Dev\STM32F103-TFT943
-1-SPI-SD\USER\RTE -IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\1.0.5\Device\Include
- -IC:\Keil_v5\ARM\CMSIS\Include --predefine="STM32F10X_MD SETA 1" --list=.\star
-tup_stm32f10x_md.lst ..\CORE\startup_stm32f10x_md.s
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
+ork --depend=..\bin\startup_stm32f10x_md.d -o..\bin\startup_stm32f10x_md.o -IC:
+\Dev\STM32F103-TFT9431-SPI-SD\USER\RTE -IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP
+\1.1.0\Device\Include -IC:\Keil_v5\ARM\CMSIS\Include --predefine="__UVISION_VER
+SION SETA 514" --predefine="STM32F10X_MD SETA 1" --list=.\startup_stm32f10x_md.
+lst ..\CORE\startup_stm32f10x_md.s
 
 
 
@@ -1205,4 +1206,4 @@ Symbol: __use_two_region_memory
       None
 Comment: __use_two_region_memory unused
 3 symbols
-407 symbols in table
+408 symbols in table

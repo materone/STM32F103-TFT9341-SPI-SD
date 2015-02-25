@@ -359,8 +359,8 @@ int SD_TotalSize(char *path)
 int FTTest(void)
 {
 	u8 res;
-	u16 cnt = 1;
 	uint16_t x = 0, y = 0;
+	u16 cnt = 1;
 	printf("Begin BMP File display test\r\n");
 	TFT_CS_SET;
 	//挂载文件系统
@@ -511,7 +511,7 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
   uint8_t sdbuffer[BUFFPIXEL];  // 3 * pixels to buffer
   uint16_t buffidx = BUFFPIXEL;
 	TFT_WriteIndex(0x3A);   //set color 18 bit or 16bit 
-  TFT_WriteData(0x66);    //55 -> 16 66->18
+  TFT_WriteData(0x66);	//55 -> 16 66->18
   f_lseek(f,bmpImageoffset);
 //  Tft.setCol(x, bmpWidth + x - 1);
 //  Tft.setPage(y, bmpHeight + y - 1);
@@ -588,11 +588,11 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
 //  delay(100);
 //  scrollV();
 	TFT_CS_CLR;
-  TFT_WriteIndex(0x3A);   //set color 18 bit or 16bit 
-  TFT_WriteData(0x55);    //55 -> 16 66->18
-	TFT_DrawFont_GBK16(0,0,BLUE,WHITE,"Some best picture");
+	TFT_WriteIndex(0x3A);   //set color 18 bit or 16bit 
+	TFT_WriteData(0x55);	//55 -> 16 66->18
+	TFT_DrawFont_GBK16(0,0,BLUE,YELLOW,(u8 *)path0);
 	delay_ms(5000);
- // printf("Use %d ms",millis() - time);
+// printf("Use %d ms",millis() - time);
 //  Serial.println(" ms");
 }
 
