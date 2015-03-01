@@ -218,6 +218,8 @@ pip-log.txt
 *.tony
 *.uvoptx
 *.lst
+*.map
 .tony
 .uvoptx
 .map
+.lst
