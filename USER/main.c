@@ -8,6 +8,7 @@
 #include "rtc.h"
 #include "ff.h"  
 #include "string.h"
+#include "ESP8266.h"
 
 //define
 #define BUFFPIXEL 3*100
@@ -139,6 +140,7 @@ int main(void)
   SystemInit();
   delay_init(72);//—” ±≥ı ºªØ 
   uart_init(9600);
+	wifi_init(9600);
 	TFT_Init();			
 	TFT_Clear(BLACK);
 	TFT_LED_SET;

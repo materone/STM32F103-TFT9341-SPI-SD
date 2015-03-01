@@ -66,7 +66,7 @@
  							   						 	 
 //这部分应根据具体的连线来修改!
 //Mini STM32使用的是PA3作为SD卡的CS脚.
-#define	SD_CS  PAout(3) //SD卡片选引脚					    	  
+#define	SD_CS  PAout(1) //SD卡片选引脚	,与USART 1冲突，选PA1，默认PA3		    	  
 
 extern u8  SD_Type;//SD卡的类型
 //函数申明区 

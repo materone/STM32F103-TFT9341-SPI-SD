@@ -260,9 +260,12 @@ u8 SD_Init(void)
     //设置硬件上与SD卡相关联的控制引脚输出
 	//避免NRF24L01/W25X16等的影响
 	RCC->APB2ENR|=1<<2;       //PORTA时钟使能 
-	GPIOA->CRL&=0XFFF000FF; 
-	GPIOA->CRL|=0X00033300;//PA2.3.4 推挽 	    
-	GPIOA->ODR|=0X7<<2;    //PA2.3.4上拉 
+//	GPIOA->CRL&=0XFFF000FF; 
+//	GPIOA->CRL|=0X00033300;//PA2.3.4 推挽 	    
+//	GPIOA->ODR|=0X7<<2;    //PA2.3.4上拉 
+	GPIOA->CRL&=0XFFF0FF0F; //add PA1,remove 2,3 for usart2
+	GPIOA->CRL|=0X00030030;//PA2.3.4 推挽 	//add PA1  ,remove 2,3 for usart2  
+	GPIOA->ODR|=0X9<<1;    //PA2.3.4上拉 //add PA1,remove 2,3 for usart2
 	SPIx_Init();
  	//SPIx_SetSpeed(SPI_SPEED_256);//设置到低速模式		 
 	SD_CS=1;	
