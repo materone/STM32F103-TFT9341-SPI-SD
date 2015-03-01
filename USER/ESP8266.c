@@ -58,31 +58,47 @@ void uart2_init(u32 bound){
 void USART2_IRQHandler(void)                	//串口2中断服务程序
 	{
 	u8 Res;
-	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //接收中断(接收到的数据必须是0x0d 0x0a结尾)
-		{
-		Res =USART_ReceiveData(USART2);//(USART2->DR);	//读取接收到的数据
-		//printf("%c --> %x",Res,Res);
-			printf("%c",Res);
-		
-//		if((USART_RX_STA&0x80)==0)//接收未完成
-//			{
-//			if(USART_RX_STA&0x40)//接收到了0x0d
-//				{
-//				if(Res!=0x0a)USART_RX_STA=0;//接收错误,重新开始
-//				else USART_RX_STA|=0x80;	//接收完成了 
-//				}
-//			else //还没收到0X0D
-//				{	
-//				if(Res==0x0d)USART_RX_STA|=0x40;
-//				else
-//					{
-//					USART_RX_BUF[USART_RX_STA&0X3F]=Res ;
-//					USART_RX_STA++;
-//					if(USART_RX_STA>BUFSIZE)USART_RX_STA=0;//接收数据错误,重新开始接收	  
-//					}		 
-//				}
-//			}   		 
-     } 
+		//接收中断  
+
+	if(USART_GetITStatus(USART2,USART_IT_RXNE)==SET) 
+	{  
+
+		USART_ClearITPendingBit(USART2,USART_IT_RXNE);  
+		Res = USART_ReceiveData(USART2); 
+	} 
+
+	//溢出-如果发生溢出需要先读 SR,再读 DR 寄存器则可清除不断入中断的问题[牛人说要这样]  
+	if(USART_GetFlagStatus(USART2,USART_FLAG_ORE)==SET) 
+	{  
+		USART_ClearFlag(USART2,USART_FLAG_ORE); //读 SR 其实就是清除标志 
+		Res = USART_ReceiveData(USART2); //读 DR 
+	} 
+	printf("%c",Res);
+//	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //接收中断(接收到的数据必须是0x0d 0x0a结尾)
+//		{
+//		Res =USART_ReceiveData(USART2);//(USART2->DR);	//读取接收到的数据
+//		//printf("%c --> %x",Res,Res);
+//			printf("%c",Res);
+//		
+////		if((USART_RX_STA&0x80)==0)//接收未完成
+////			{
+////			if(USART_RX_STA&0x40)//接收到了0x0d
+////				{
+////				if(Res!=0x0a)USART_RX_STA=0;//接收错误,重新开始
+////				else USART_RX_STA|=0x80;	//接收完成了 
+////				}
+////			else //还没收到0X0D
+////				{	
+////				if(Res==0x0d)USART_RX_STA|=0x40;
+////				else
+////					{
+////					USART_RX_BUF[USART_RX_STA&0X3F]=Res ;
+////					USART_RX_STA++;
+////					if(USART_RX_STA>BUFSIZE)USART_RX_STA=0;//接收数据错误,重新开始接收	  
+////					}		 
+////				}
+////			}   		 
+//     } 
 		//printf("  In U2\r\n");
 } 
 	
