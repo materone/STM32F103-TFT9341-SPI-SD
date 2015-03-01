@@ -140,7 +140,6 @@ int main(void)
   SystemInit();
   delay_init(72);//—” ±≥ı ºªØ 
   uart_init(9600);
-	wifi_init(9600);
 	TFT_Init();			
 	TFT_Clear(BLACK);
 	TFT_LED_SET;
@@ -152,7 +151,8 @@ int main(void)
 	TFT_CS_CLR;
   while(1) 
   {
-		FTTest();
+		wifi_init(9600);
+		//FTTest();
 		TFT_Clear(BLUE);  
 		//delay_ms(1000);
 		delay_ms(1000);

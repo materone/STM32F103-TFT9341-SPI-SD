@@ -32,8 +32,8 @@ void uart2_init(u32 bound){
   //Usart2 NVIC 配置
 
 	NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=3 ;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;		//
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=0 ;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;		//
 
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQ通道使能
 	NVIC_Init(&NVIC_InitStructure);	//根据NVIC_InitStruct中指定的参数初始化外设NVIC寄存器USART1
@@ -61,7 +61,8 @@ void USART2_IRQHandler(void)                	//串口2中断服务程序
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //接收中断(接收到的数据必须是0x0d 0x0a结尾)
 		{
 		Res =USART_ReceiveData(USART2);//(USART2->DR);	//读取接收到的数据
-		printf("%c --> %x",Res,Res);
+		//printf("%c --> %x",Res,Res);
+			printf("%c",Res);
 		
 //		if((USART_RX_STA&0x80)==0)//接收未完成
 //			{
@@ -82,14 +83,16 @@ void USART2_IRQHandler(void)                	//串口2中断服务程序
 //				}
 //			}   		 
      } 
-		printf("  In U2 \n");
+		//printf("  In U2\r\n");
 } 
 	
 void wifi_init(u32 band){
 	// init usart2 PA2,PA3
 	uart2_init(band);
-	esp_write("\r\n");
+	printf("Test1\r\n");
 	esp_write("AT+GMR\r\n");
+	printf("\tTest2\r\n");
+	esp_write("AT+CWLAP\r\n");
 }
 
 int esp_write(u8 *str)
