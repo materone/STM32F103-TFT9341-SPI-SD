@@ -152,7 +152,7 @@ int main(void)
   while(1) 
   {
 		wifi_init(9600);
-		//FTTest();
+		FTTest();
 		TFT_Clear(BLUE);  
 		//delay_ms(1000);
 		delay_ms(1000);
@@ -398,7 +398,7 @@ int FTTest(void)
 	//¶ÁBMPÎÄ¼þ²âÊÔ
 	printf("read bmp file test......\n\r");
 	
-	for ( ;cnt < 140; cnt++){
+	for ( ;cnt < 5; cnt++){
 		sprintf(path0,"0:/%d.BMP",cnt);
 		printf(path0);
 		res = f_open(&fsrc, path0, FA_OPEN_EXISTING | FA_READ);

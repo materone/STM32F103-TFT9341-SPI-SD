@@ -1,9 +1,9 @@
 #include "stm32f10x.h"
 #include "usart.h"
 #include "ESP8266.h"
+#include "delay.h"
 
-#define BUFSIZE 255
-u8 ESP8266_RX_BUF[BUFSIZE];     //接收缓冲,最大64个字节.
+//u8 ESP8266_RX_BUF[BUFSIZE];     //接收缓冲,最大64个字节.
 //接收状态
 //bit7，接收完成标志
 //bit6，接收到0x0d
@@ -49,6 +49,9 @@ void uart2_init(u32 bound){
 
 	USART_Init(USART2, &USART_InitStructure);
 	
+	rx_buffer_head = 0;
+	rx_buffer_tail = 0;
+	
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);//开启中断
  
 	USART_Cmd(USART2, ENABLE);                    //使能串口 
@@ -58,22 +61,29 @@ void uart2_init(u32 bound){
 void USART2_IRQHandler(void)                	//串口2中断服务程序
 	{
 	u8 Res;
-		//接收中断  
-
+	u16 head;
+	//接收中断  
 	if(USART_GetITStatus(USART2,USART_IT_RXNE)==SET) 
 	{  
-
 		USART_ClearITPendingBit(USART2,USART_IT_RXNE);  
-		Res = USART_ReceiveData(USART2); 
-	} 
-
-	//溢出-如果发生溢出需要先读 SR,再读 DR 寄存器则可清除不断入中断的问题[牛人说要这样]  
-	if(USART_GetFlagStatus(USART2,USART_FLAG_ORE)==SET) 
-	{  
-		USART_ClearFlag(USART2,USART_FLAG_ORE); //读 SR 其实就是清除标志 
-		Res = USART_ReceiveData(USART2); //读 DR 
-	} 
-	printf("%c",Res);
+		Res = USART_ReceiveData(USART2);
+		head = rx_buffer_head + 1;
+		if (head >= RX_BUFFER_SIZE) head = 0;
+		if (head != rx_buffer_tail) {
+			rx_buffer[head] = Res;
+			rx_buffer_head = head;
+		}else{
+			printf("RX Buffer Overflow\r\n");
+		}
+	}
+	
+//	//溢出-如果发生溢出需要先读 SR,再读 DR 寄存器则可清除不断入中断的问题[牛人说要这样]  
+//	if(USART_GetFlagStatus(USART2,USART_FLAG_ORE)==SET) 
+//	{  
+//		USART_ClearFlag(USART2,USART_FLAG_ORE); //读 SR 其实就是清除标志 
+//		Res = USART_ReceiveData(USART2); //读 DR 
+//	} 
+	//printf("%c",Res);
 //	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //接收中断(接收到的数据必须是0x0d 0x0a结尾)
 //		{
 //		Res =USART_ReceiveData(USART2);//(USART2->DR);	//读取接收到的数据
@@ -107,8 +117,17 @@ void wifi_init(u32 band){
 	uart2_init(band);
 	printf("Test1\r\n");
 	esp_write("AT+GMR\r\n");
-	printf("\tTest2\r\n");
+	while(available() != 0){
+		printf("%c",read());
+	}
+	printf("\r\n");
 	esp_write("AT+CWLAP\r\n");
+	delay_ms(5000);
+	printf("\r\n");
+	while(available() != 0){
+		printf("%c",read());
+	}
+	printf("\r\n");
 }
 
 int esp_write(u8 *str)
@@ -121,5 +140,39 @@ int esp_write(u8 *str)
 		str++;
 	}
 	return 1;
+}
+
+int read(void)
+{
+	u16 head, tail;
+	u8 out;
+
+	head = rx_buffer_head;
+	tail = rx_buffer_tail;
+	if (head == tail) return -1;
+	if (++tail >= RX_BUFFER_SIZE) tail = 0;
+	out = rx_buffer[tail];
+	rx_buffer_tail = tail;
+	return out;
+}
+
+int peek(void)
+{
+	u16 head, tail;
+
+	head = rx_buffer_head;
+	tail = rx_buffer_tail;
+	if (head == tail) return -1;
+	return rx_buffer[tail];
+}
+
+int available(void)
+{
+	u16 head, tail;
+
+	head = rx_buffer_head;
+	tail = rx_buffer_tail;
+	if (head >= tail) return head - tail;
+	return RX_BUFFER_SIZE + head - tail;
 }
 
