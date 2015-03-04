@@ -1,7 +1,6 @@
 #include "stm32f10x.h"
 #include "usart.h"
 #include "ESP8266.h"
-#include "delay.h"
 
 #define BUFSIZE 255
 u8 ESP8266_RX_BUF[BUFSIZE];     //接收缓冲,最大64个字节.
@@ -110,7 +109,6 @@ void wifi_init(u32 band){
 	esp_write("AT+GMR\r\n");
 	printf("\tTest2\r\n");
 	esp_write("AT+CWLAP\r\n");
-	delay_ms(5000);
 }
 
 int esp_write(u8 *str)
