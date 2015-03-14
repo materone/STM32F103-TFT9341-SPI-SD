@@ -83,33 +83,7 @@ void USART2_IRQHandler(void)                	//串口2中断服务程序
 //		USART_ClearFlag(USART2,USART_FLAG_ORE); //读 SR 其实就是清除标志 
 //		Res = USART_ReceiveData(USART2); //读 DR 
 //	} 
-	//printf("%c",Res);
-//	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)  //接收中断(接收到的数据必须是0x0d 0x0a结尾)
-//		{
-//		Res =USART_ReceiveData(USART2);//(USART2->DR);	//读取接收到的数据
-//		//printf("%c --> %x",Res,Res);
-//			printf("%c",Res);
-//		
-////		if((USART_RX_STA&0x80)==0)//接收未完成
-////			{
-////			if(USART_RX_STA&0x40)//接收到了0x0d
-////				{
-////				if(Res!=0x0a)USART_RX_STA=0;//接收错误,重新开始
-////				else USART_RX_STA|=0x80;	//接收完成了 
-////				}
-////			else //还没收到0X0D
-////				{	
-////				if(Res==0x0d)USART_RX_STA|=0x40;
-////				else
-////					{
-////					USART_RX_BUF[USART_RX_STA&0X3F]=Res ;
-////					USART_RX_STA++;
-////					if(USART_RX_STA>BUFSIZE)USART_RX_STA=0;//接收数据错误,重新开始接收	  
-////					}		 
-////				}
-////			}   		 
-//     } 
-		//printf("  In U2\r\n");
+
 } 
 	
 void wifi_init(u32 band){
