@@ -143,7 +143,7 @@ int peek(void)
 int available(void)
 {
 	u16 head, tail;
-
+	
 	head = rx_buffer_head;
 	tail = rx_buffer_tail;
 	if (head >= tail) return head - tail;
