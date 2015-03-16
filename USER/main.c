@@ -317,7 +317,7 @@ FRESULT scan_files (
 				if (res != FR_OK) break;
 				path[i] = 0;
 			} else {									   /* It is a file. */
-				printf("scan file - %s/%s%d\n\r ", path, fn,seconds());
+				printf("scan file - %s/%s\n\r ", path, fn);
 			}
 		}
 	}else{
@@ -505,7 +505,7 @@ int  bmpReadHeader(FIL *f) {
 
    printf("compression %d\r\n",tmp);
 
-	printf("W:H %d:%d\r\n",bmpWidth,bmpHeight);
+	printf("W:H %d:%d -t %d\r\n",bmpWidth,bmpHeight,seconds());
   return 1;
 }
 
