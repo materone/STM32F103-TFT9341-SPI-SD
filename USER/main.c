@@ -15,6 +15,7 @@
 #define PICFILES	140;
 uint8_t color18 = 1;
 uint8_t feed = 1;
+u32 timecount=0;
 
 //var
 FATFS fs;		 /* Work area (file system object) for logical drive */
@@ -39,6 +40,7 @@ int FTTest(void);
 int testRTC(void);
 int bmpReadHeader(FIL *);
 void bmpdraw(FIL *, uint8_t , uint8_t);
+u32 seconds(void);
 unsigned char Num[10]={0,1,2,3,4,5,6,7,8,9};
 void Redraw_Mainmenu(void)
 {
@@ -140,6 +142,9 @@ int main(void)
   SystemInit();
   delay_init(72);//延时初始化 
   uart_init(9600);
+	//RTC init
+	RTC_NVIC_Config();
+	
 	TFT_Init();			
 	TFT_Clear(BLACK);
 	TFT_LED_SET;
@@ -312,7 +317,7 @@ FRESULT scan_files (
 				if (res != FR_OK) break;
 				path[i] = 0;
 			} else {									   /* It is a file. */
-				printf("scan file - %s/%s\n\r", path, fn);
+				printf("scan file - %s/%s\n\r ", path, fn);
 			}
 		}
 	}else{
@@ -362,7 +367,8 @@ int FTTest(void)
 {
 	u8 res;
 	uint16_t x = 0, y = 0;
-	u16 cnt = 1;
+	u16 cnt = 1;    
+	
 	printf("Begin BMP File display test\r\n");
 	TFT_CS_SET;
 	//挂载文件系统
@@ -499,7 +505,7 @@ int  bmpReadHeader(FIL *f) {
 
    printf("compression %d\r\n",tmp);
 
-	printf("W:H %d:%d\r\n",bmpWidth,bmpHeight);
+	printf("W:H %d:%d -t %d\r\n",bmpWidth,bmpHeight,seconds());
   return 1;
 }
 
@@ -598,4 +604,11 @@ void bmpdraw(FIL *f, uint8_t x, uint8_t y)
 //  Serial.println(" ms");
 }
 
+u32 seconds(void){
+	u32 last=timecount;
+	timecount=RTC->CNTH;//得到计数器中的值(秒钟数)
+	timecount<<=16;
+	timecount+=RTC->CNTL;	
+	return timecount - last;
+}
 
