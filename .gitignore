@@ -223,3 +223,11 @@ pip-log.txt
 .uvoptx
 .map
 .lst
+*.map
+USER/LCD.uvguix.tony
+*.uvoptx
+USER/LCD.uvprojx
+*.uvprojx
+USER/USER.map
+*.uvprojx
+USER/LCD.uvoptx
