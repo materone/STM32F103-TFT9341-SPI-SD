@@ -22,7 +22,7 @@ Section Cross References
     main.o(.text) refers to mmc_sd.o(.text) for SD_Init
     main.o(.text) refers to system_stm32f10x.o(.text) for SystemInit
     main.o(.text) refers to usart.o(.text) for uart_init
-    main.o(.text) refers to rtc.o(.text) for RTC_NVIC_Config
+    main.o(.text) refers to rtc.o(.text) for RTC_Init
     main.o(.text) refers to esp8266.o(.text) for wifi_init
     main.o(.text) refers to main.o(.bss) for fs
     main.o(.text) refers to rtc.o(.bss) for timer

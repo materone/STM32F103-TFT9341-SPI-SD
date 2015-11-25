@@ -143,7 +143,7 @@ int main(void)
   delay_init(72);//—” ±≥ı ºªØ 
   uart_init(9600);
 	//RTC init
-	RTC_NVIC_Config();
+	RTC_Init();
 	
 	TFT_Init();			
 	TFT_Clear(BLACK);
@@ -156,7 +156,7 @@ int main(void)
 	TFT_CS_CLR;
   while(1) 
   {
-		wifi_init(9600);
+		//wifi_init(9600);
 		FTTest();
 		TFT_Clear(BLUE);  
 		//delay_ms(1000);
