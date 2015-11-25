@@ -216,10 +216,18 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 *.tony
-*.uvoptx
+.uvoptx
 *.lst
-*.map
+.map
 .tony
 .uvoptx
 .map
 .lst
+*.map
+USER/LCD.uvguix.tony
+*.uvoptx
+USER/LCD.uvprojx
+*.uvprojx
+USER/USER.map
+*.uvprojx
+USER/LCD.uvoptx

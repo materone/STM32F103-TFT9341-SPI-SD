@@ -150,3 +150,8 @@ int available(void)
 	return RX_BUFFER_SIZE + head - tail;
 }
 
+void flush(void){
+	rx_buffer_head = 0;
+	rx_buffer_tail = 0;
+}
+
