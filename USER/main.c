@@ -369,7 +369,7 @@ int FTTest(void)
 	uint16_t x = 0, y = 0;
 	u16 cnt = 1;    
 	
-	printf("Begin BMP File display test\r\n");
+	printf("Begin BMP File display test, Get Size of SD\r\n");
 	TFT_CS_SET;
 	//挂载文件系统
 	res = f_mount(&fs,"0:",1);
